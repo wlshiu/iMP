@@ -18,6 +18,7 @@ extern "C" {
 #endif
 
 #include "basic_type.h"
+#include "handler_desc.h"
 #include "cmd_msg.h"
 //=============================================================================
 //                Constant Definition
@@ -76,7 +77,7 @@ looper_DestroyHandle(
 BERR
 looper_Post_CmdMsg(
     LOOPER_HANDLE   *pHLooper,
-    CMD_BOX         *pCmd_box);
+    CMDMSG_BOX      *pCmdMsg_box);
 
 
 #ifdef __cplusplus

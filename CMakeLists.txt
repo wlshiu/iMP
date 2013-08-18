@@ -86,8 +86,8 @@ add_library(imp STATIC
     cmd_router.h
     info_reply.c
     info_reply.h
-    ite_media_player.c
-    ite_media_player.h
+    i_media_player.c
+    i_media_player.h
     media_player_cfg.h
     media_player_def.h
     media_player_err.h

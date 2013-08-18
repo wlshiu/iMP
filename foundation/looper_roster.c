@@ -102,7 +102,7 @@ _looper_roster_proc(
             uint32_t        i = 0;
             CMDMSG_NODE     *pCur_cmdmsg_node = pLooperroster->pTx_cmdmsg_header;
             LOOPER_NODE     *pCur_looper_node = 0;
-            CMD_ARG         *pCmd_arg = 0;
+            CMDMSG_ARG      *pCmd_arg = 0;
 
             b_mutex_lock(B_MSG_TRACE_LOOPER_ROSTER, pLooperroster->my_mutext);
 
@@ -116,42 +116,42 @@ _looper_roster_proc(
 
             //-------------------------------
             // send cmd msg to handlers
-            pCmd_arg = &pCur_cmdmsg_node->cmd_box.cmd_arg;
+            pCmd_arg = &pCur_cmdmsg_node->cmdmsg_box.cmdmsg_arg;
             /*******************
              * To Do: How to make that the current looper actually ready
              *        and then send to the next looper ?
              ******************/
             switch( pCmd_arg->cmdmsg_send_order )
             {
-                case CMDMSG_SENDORDER_FIFO: // the first node first
+                case CMDMSG_SEND_ORDER_FIFO: // the first node first
                     pCur_looper_node = pLooperroster->pLooper_header;
                     while( pCur_looper_node )
                     {
                         LOOPER_HANDLE       *pCur_HLooper = pCur_looper_node->pHLooper;
                         if( BOP_IS_SET(&pCmd_arg->receiver, pCur_HLooper->handler_id) )
                         {
-                            looper_Post_CmdMsg(pCur_HLooper, &pCur_cmdmsg_node->cmd_box);
+                            looper_Post_CmdMsg(pCur_HLooper, &pCur_cmdmsg_node->cmdmsg_box);
                         }
 
                         pCur_looper_node = pCur_looper_node->next;
                     }
                     break;
 
-                case CMDMSG_SENDORDER_LIFO: // the last node first
+                case CMDMSG_SEND_ORDER_LIFO: // the last node first
                     pCur_looper_node = QUEUE_FIND_TAIL(LOOPER_NODE, pLooperroster->pLooper_header);
                     while( pCur_looper_node )
                     {
                         LOOPER_HANDLE       *pCur_HLooper = pCur_looper_node->pHLooper;
                         if( BOP_IS_SET(&pCmd_arg->receiver, pCur_HLooper->handler_id) )
                         {
-                            looper_Post_CmdMsg(pCur_HLooper, &pCur_cmdmsg_node->cmd_box);
+                            looper_Post_CmdMsg(pCur_HLooper, &pCur_cmdmsg_node->cmdmsg_box);
                         }
 
                         pCur_looper_node = pCur_looper_node->prev;
                     }
                     break;
 
-                case CMDMSG_SENDORDER_CUSTOMER:
+                case CMDMSG_SEND_ORDER_CUSTOMER:
                     for(i = 0; i < pCmd_arg->order_customer_length; i++)
                     {
                         pCur_looper_node = QUEUE_FIND(LOOPER_NODE, _search_looper,
@@ -160,7 +160,7 @@ _looper_roster_proc(
                         {
                             LOOPER_HANDLE       *pCur_HLooper = pCur_looper_node->pHLooper;
 
-                            looper_Post_CmdMsg(pCur_HLooper, &pCur_cmdmsg_node->cmd_box);
+                            looper_Post_CmdMsg(pCur_HLooper, &pCur_cmdmsg_node->cmdmsg_box);
                         }
                     }
                     break;
@@ -194,7 +194,7 @@ looperroster_CreateHandle(
     do{
         LOOPER_ROSTER   *pLooperroster = 0;
 
-        if( !ppHLooperroster || *ppHLooperroster != 0 )
+        if( !ppHLooperroster || (*ppHLooperroster) )
         {
             b_msg_ex(B_MSG_ERR, "error, wrong parameters !!");
             result = BERR_INVALID_PARAMETER;
@@ -272,8 +272,8 @@ looperroster_DestroyHandle(
         while( pCur_cmdmsg_node )
         {
             pLooperroster->pTx_cmdmsg_header = QUEUE_DEL(CMDMSG_NODE, pCur_cmdmsg_node);
-            if( pCur_cmdmsg_node->cmd_box.cmd_arg.pOrder_customer )
-                free(pCur_cmdmsg_node->cmd_box.cmd_arg.pOrder_customer);
+            if( pCur_cmdmsg_node->cmdmsg_box.cmdmsg_arg.pOrder_customer )
+                free(pCur_cmdmsg_node->cmdmsg_box.cmdmsg_arg.pOrder_customer);
 
             free(pCur_cmdmsg_node);
 
@@ -396,6 +396,7 @@ looperroster_Post_CmdMsg(
 {
     BERR            result = BERR_OK;
     LOOPER_ROSTER   *pLooperroster = 0;
+    CMDMSG_NODE     *pNew_cmdmsg_node = 0;
 
     b_verify_handle(pHLooperroster, result);
 
@@ -404,12 +405,10 @@ looperroster_Post_CmdMsg(
     b_mutex_lock(B_MSG_TRACE_LOOPER_ROSTER, pLooperroster->my_mutext);
 
     do{
-        CMDMSG_NODE     *pNew_cmdmsg_node = 0;
         CMDMSG_NODE     **ppAct_cmdmsg_head = 0;
         CMDMSG_NODE     **ppAct_cmdmsg_queue = 0;
         uint32_t        *pCmdmsg_num = 0;
-        CMD_ARG         *pRecv_cmd_arg = 0;
-
+        CMDMSG_ARG      *pRecv_cmd_arg = 0;
 
         if( !pCmdmsg_info )     break;
 
@@ -430,14 +429,14 @@ looperroster_Post_CmdMsg(
 
         QUEUE_INIT(pNew_cmdmsg_node);
 
-        pNew_cmdmsg_node->cmd_box = pCmdmsg_info->cmd_box;
+        pNew_cmdmsg_node->cmdmsg_box = pCmdmsg_info->cmdmsg_box;
 
-        pRecv_cmd_arg = &pCmdmsg_info->cmd_box.cmd_arg;
+        pRecv_cmd_arg = &pCmdmsg_info->cmdmsg_box.cmdmsg_arg;
 
-        if( pRecv_cmd_arg->cmdmsg_send_order == CMDMSG_SENDORDER_CUSTOMER &&
+        if( pRecv_cmd_arg->cmdmsg_send_order == CMDMSG_SEND_ORDER_CUSTOMER &&
             pRecv_cmd_arg->pOrder_customer && pRecv_cmd_arg->order_customer_length )
         {
-            CMD_ARG         *pTmp_cmd_arg = &pNew_cmdmsg_node->cmd_box.cmd_arg;
+            CMDMSG_ARG         *pTmp_cmd_arg = &pNew_cmdmsg_node->cmdmsg_box.cmdmsg_arg;
 
             pTmp_cmd_arg->pOrder_customer = b_malloc(sizeof(uint32_t)*pRecv_cmd_arg->order_customer_length);
             if( !pTmp_cmd_arg->pOrder_customer )
@@ -485,8 +484,8 @@ looperroster_Post_CmdMsg(
 
     if( result != BERR_OK )
     {
-        if( pNew_cmdmsg_node->cmd_box.cmd_arg.pOrder_customer )
-            free(pNew_cmdmsg_node->cmd_box.cmd_arg.pOrder_customer);
+        if( pNew_cmdmsg_node->cmdmsg_box.cmdmsg_arg.pOrder_customer )
+            free(pNew_cmdmsg_node->cmdmsg_box.cmdmsg_arg.pOrder_customer);
 
         if( pNew_cmdmsg_node )  free(pNew_cmdmsg_node);
 

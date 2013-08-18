@@ -109,7 +109,7 @@ cmdmsg_DestroyHandle(
 BERR
 cmdmsg_Post_CmdMsg(
     CMDMSG_HANDLE   *pHCmdmsg,
-    CMD_BOX         *pCmd_box)
+    CMDMSG_BOX      *pCmdMsg_box)
 {
     BERR        result = BERR_OK;
 
@@ -117,13 +117,43 @@ cmdmsg_Post_CmdMsg(
         CMD_MSG                     *pCmdmsg = 0;
         LOOPERROSTER_CMDMSG_INFO    looperroster_cmdmsg_info = {0};
 
-        if( !pHCmdmsg || !pCmd_box )    break;
+        if( !pHCmdmsg || !pCmdMsg_box )    break;
 
         pCmdmsg = DOWN_CAST(CMD_MSG, pHCmdmsg, hCmdmsg);
-        
-        looperroster_cmdmsg_info.type    = LOOPERROSTER_CMDMSG_APPT;
-        looperroster_cmdmsg_info.cmd_box = (*pCmd_box);
 
+        looperroster_cmdmsg_info.type       = LOOPERROSTER_CMDMSG_APPT;
+        looperroster_cmdmsg_info.cmdmsg_box = (*pCmdMsg_box);
+
+        looperroster_Post_CmdMsg(pCmdmsg->pHLooperroster, &looperroster_cmdmsg_info);
+    }while(0);
+
+    if( result != BERR_OK )
+    {
+        printf("%s, err 0x%x !", __FUNCTION__, result);
+    }
+
+    return result;
+}
+
+BERR
+cmdmsg_Post_ER_CmdMsg(
+    CMDMSG_HANDLE   *pHCmdmsg,
+    CMDMSG_BOX      *pCmdMsg_box)
+{
+    BERR        result = BERR_OK;
+
+    do{
+        CMD_MSG                     *pCmdmsg = 0;
+        LOOPERROSTER_CMDMSG_INFO    looperroster_cmdmsg_info = {0};
+
+        if( !pHCmdmsg || !pCmdMsg_box )    break;
+
+        pCmdmsg = DOWN_CAST(CMD_MSG, pHCmdmsg, hCmdmsg);
+
+        looperroster_cmdmsg_info.type       = LOOPERROSTER_CMDMSG_ER;
+        looperroster_cmdmsg_info.cmdmsg_box = (*pCmdMsg_box);
+
+        // emergency cmd
         looperroster_Post_CmdMsg(pCmdmsg->pHLooperroster, &looperroster_cmdmsg_info);
     }while(0);
 
@@ -138,7 +168,7 @@ cmdmsg_Post_CmdMsg(
 BERR
 cmdmsg_Post_Resp_CmdMsg(
     CMDMSG_HANDLE   *pHCmdmsg,
-    CMD_BOX         *pCmd_box)
+    CMDMSG_BOX      *pCmdMsg_box)
 {
     BERR        result = BERR_OK;
 
@@ -146,12 +176,12 @@ cmdmsg_Post_Resp_CmdMsg(
         CMD_MSG                     *pCmdmsg = 0;
         LOOPERROSTER_CMDMSG_INFO    looperroster_cmdmsg_info = {0};
 
-        if( !pHCmdmsg || !pCmd_box )    break;
+        if( !pHCmdmsg || !pCmdMsg_box )    break;
 
         pCmdmsg = DOWN_CAST(CMD_MSG, pHCmdmsg, hCmdmsg);
-        
-        looperroster_cmdmsg_info.type    = LOOPERROSTER_CMDMSG_RESP;
-        looperroster_cmdmsg_info.cmd_box = (*pCmd_box);
+
+        looperroster_cmdmsg_info.type       = LOOPERROSTER_CMDMSG_RESP;
+        looperroster_cmdmsg_info.cmdmsg_box = (*pCmdMsg_box);
 
         // response cmd
         looperroster_Post_CmdMsg(pCmdmsg->pHLooperroster, &looperroster_cmdmsg_info);

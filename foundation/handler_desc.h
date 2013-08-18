@@ -18,17 +18,17 @@ extern "C" {
 #endif
 
 
-#include "basic_type.h"
+#include "cmd_msg.h"
 //=============================================================================
 //				  Constant Definition
 //=============================================================================
-#define HANDLER_MAX_NUM         32
+#define HANDLER_MAX_NUM         CMDMSG_HANDLER_MAX_NUM
 
 typedef enum HANDLER_ID_T
 {
-    HANDLER_ID_MM_DEMUX     = 0,
-    HANDLER_ID_MM_A_DEC,
-    HANDLER_ID_MM_V_DEC,
+    // HANDLER_ID_MM_DEMUX     = 0,
+    // HANDLER_ID_MM_A_DEC,
+    // HANDLER_ID_MM_V_DEC,
 
     HANDLER_ID_TOTAL     = HANDLER_MAX_NUM,
 }HANDLER_ID;
@@ -40,22 +40,38 @@ typedef enum HANDLER_ID_T
 //=============================================================================
 //				  Structure Definition
 //=============================================================================
+typedef struct HANDLER_CTRL_INFO_T
+{
+    CMDMSG_BOX     cmdmsg_box;
+
+    void        *pPriv_data;
+
+}HANDLER_CTRL_INFO;
+
 typedef struct HANDLER_DESC_T
 {
     struct HANDLER_DESC_T *next;
 
     char        *name;
     uint32_t    handler_id;
-
-
-    // uint32_t    (*pre_process)();
-    uint32_t    (*process)();
-    // uint32_t    (*post_process)();
-    uint32_t    (*cmd_receive)();
-
-    uint32_t    (*emergency_proc)();
     
-    uint32_t    (*report)();
+    CMDMSG_BOX_NEW  pfCmdMsg_box_New;  // create cmd msg box context
+    CMDMSG_BOX_DEL  pfCmdMsg_box_Del;  // delete cmd msg box context
+
+
+    uint32_t    (*init)(HANDLER_CTRL_INFO *pCtrl_info, void *extraData);
+    uint32_t    (*deinit)(HANDLER_CTRL_INFO *pCtrl_info, void *extraData);
+
+    // uint32_t    (*pre_process)(HANDLER_CTRL_INFO *pCtrl_info, void *extraData);
+    uint32_t    (*process)(HANDLER_CTRL_INFO *pCtrl_info, void *extraData);
+    // uint32_t    (*post_process)(HANDLER_CTRL_INFO *pCtrl_info, void *extraData);
+
+    uint32_t    (*cmd_receive)(HANDLER_CTRL_INFO *pCtrl_info, void *extraData);
+
+    // uint32_t    (*emergency_proc)(HANDLER_CTRL_INFO *pCtrl_info, void *extraData);
+
+    uint32_t    (*report)(HANDLER_CTRL_INFO *pCtrl_info, void *extraData);
+
 }HANDLER_DESC;
 //=============================================================================
 //				  Global Data Definition

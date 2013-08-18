@@ -53,7 +53,7 @@ typedef struct LOOPERROSTER_LOOPER_INFO_T
 typedef struct LOOPERROSTER_CMDMSG_INFO_T
 {
     LOOPERROSTER_CMDMSG_TYPE    type;
-    CMD_BOX                     cmd_box;
+    CMDMSG_BOX                  cmdmsg_box;
 
 }LOOPERROSTER_CMDMSG_INFO;
 

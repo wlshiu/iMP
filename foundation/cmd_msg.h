@@ -19,7 +19,6 @@ extern "C" {
 
 
 #include "basic_type.h"
-#include "handler_desc.h"
 //=============================================================================
 //                Constant Definition
 //=============================================================================
@@ -58,7 +57,8 @@ typedef enum CMDMSG_TYPE_T
 }CMDMSG_TYPE;
 
 
-DEFINE_BIT_OP(HANDLER_MAX_NUM);
+#define CMDMSG_HANDLER_MAX_NUM         32
+DEFINE_BIT_OP(CMDMSG_HANDLER_MAX_NUM);
 //=============================================================================
 //                Macro Definition
 //=============================================================================
@@ -88,12 +88,21 @@ typedef struct CMDMSG_ARG_T
 
 /**
  * cmd box
+ * - Two cases at CMDMSG_BOX_NEW/CMDMSG_BOX_DEL
+ *   1. if pTunnel_Info != 0, 
+ *   2. if pTunnel_Info == 0, 
  **/
+typedef uint32_t (*CMDMSG_BOX_NEW)(struct CMDMSG_BOX_T **ppCmdMsg_box, void *pTunnel_Info);
+typedef uint32_t (*CMDMSG_BOX_DEL)(struct CMDMSG_BOX_T **ppCmdMsg_box, void *pTunnel_Info);
+
 typedef struct CMDMSG_BOX_T
 {
     CMDMSG_PRIORITY    cmdmsg_priority;
     CMDMSG_ARG         cmdmsg_arg;
     void               *pTunnel_Info[2];
+
+    CMDMSG_BOX_NEW     pfCmdMsg_box_New;
+    CMDMSG_BOX_NEW     pfCmdMsg_box_Del;
 
 }CMDMSG_BOX;
 
@@ -104,7 +113,7 @@ typedef struct CMDMSG_NODE_T
 {
     struct CMDMSG_NODE_T    *next, *prev;
 
-    CMD_BOX     cmd_box;
+    CMDMSG_BOX     cmdmsg_box;
 
 }CMDMSG_NODE;
 
@@ -148,12 +157,12 @@ cmdmsg_DestroyHandle(
 BERR
 cmdmsg_Post_CmdMsg(
     CMDMSG_HANDLE   *pHCmdmsg,
-    CMD_BOX         *pCmd_box);
+    CMDMSG_BOX      *pCmdMsg_box);
 
 BERR
 cmdmsg_Post_Resp_CmdMsg(
     CMDMSG_HANDLE   *pHCmdmsg,
-    CMD_BOX         *pCmd_box);
+    CMDMSG_BOX      *pCmdMsg_box);
 
 
 #ifdef __cplusplus

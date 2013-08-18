@@ -1,3 +1,14 @@
+/*
+ * Copyright (c) 2013 Wei-Lun Hsu. All Rights Reserved.
+ */
+/** @file test_foundation.c
+ *
+ * @author Wei-Lun Hsu
+ * @version 0.1
+ * @date 2013/08/03
+ * @license
+ * @description
+ */
 
 
 #include "cmd_msg.h"
@@ -25,9 +36,13 @@
 static void
 test_foundation()
 {
+#define LOOPER_NUM      3
+    uint32_t                i = 0;
     LOOPERROSTER_HANDLE     *pHLooperRoster = 0;
     CMDMSG_HANDLE           *pHCmdmsg = 0;
     CMDMSG_INIT_INFO        cmdmsg_init_info = {0};
+    LOOPER_HANDLE           *pHLooper[LOOPER_NUM] = {0};
+    LOOPER_INIT_INFO        looper_init_info = {0};
 
     //-----------------------------
     // create looper_roster
@@ -38,13 +53,20 @@ test_foundation()
     cmdmsg_init_info.pHLooperroster = (void*)pHLooperRoster;
     cmdmsg_CreateHandle(&pHCmdmsg, &cmdmsg_init_info);
 
-    //-----------------------------
-    // create looper
-        // attach pHCmdmsg to looper
-        // register handler to looper
+    for(i = 0; i < LOOPER_NUM; i++)
+    {
+        LOOPERROSTER_LOOPER_INFO    looperroster_looper_info = {0};
+        //-----------------------------
+        // create looper
+        looper_CreateHandle(&pHLooper[i], &looper_init_info);
+            // attach pHCmdmsg to looper
+            // register handler to looper
 
-    //-----------------------------
-    // add looper to looper_roster
+        //-----------------------------
+        // add looper to looper_roster
+        looperroster_looper_info.pHLooper = pHLooper[i];
+        looperroster_Add_Looper(pHLooperRoster, &looperroster_looper_info);
+    }
 
     //-----------------------------
     // free hanlde
